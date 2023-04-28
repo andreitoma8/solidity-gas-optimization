@@ -41,7 +41,20 @@ The most expensive opcodes are the ones that interact with the storage of the bl
 
 #### Cold and Warm Storage
 
-A storage variable that is accessed(read or write) first time in a transaction is considered `cold storage` and a variable that has been accessed before in the same transaction is considered `warm storage`. The difference between the two is that the first time a storage variable is accessed in a transaction, it costs `2,300 gas units` and the second time it costs `800 gas units`.
+A storage variable that is accessed(read or write) first time in a transaction is considered `cold storage` and a variable that has been accessed before in the same transaction is considered `warm storage`. Accessing a warm storage variable costs less than accessing a cold storage variable.
+
+#### Packing storage variables
+
+If multiple storage variables declared in Solidity can be packed into a single storage slot, the compiler will do so. When reading one of the variables, the EVM will read the entire storage slot, so it's best to pack variables that are read together.
+
+If they are not used together, it's best to declare them in separate storage slots. For example, if you declare:
+
+```solidity
+uint128 a;
+uint128 b;
+```
+
+they will be packed into the same storage slot and when you'd use one of them to, the contract will actually read the whole sotrage slot, and then get the value by it's offset. This means extra computation and extra gas. In this case it's just best to declare the values as `uint256` to skip the unpacking when you use them.
 
 ### Transaction data gas cost
 
@@ -185,6 +198,48 @@ function swap(...) external payable retuns (uint256 returnAmount) {
     require(returnAmount > 0, "1INCH: return amount is 0");
     unchecked {
         returnAmount--;
+    }
+}
+```
+
+## Pack variables together\*\*\*
+
+\*\*\* when they fit inside 32 bytes and are read together.
+
+When variables are packed together, they are stored in the same storage slot, which means that they will cost less gas to read and write both at the same time.
+
+### Example:
+
+```solidity
+struct Stake {
+    uint128 amount;
+    uint128 stakeTime;
+}
+
+mapping(address => Stake) public stakes;
+
+function stake(uint128 _amount) external {
+    // stake logic ...
+    stakes[msg.sender] = Stake({
+        amount: _amount,,
+        stakeTime: block.timestamp
+    });
+}
+```
+
+## Declare the array.lenght when looping through dynamic arrays
+
+When looping through an array, it's best to declare the array length outside the loop, because otherwise the EVM will have to read the array length from storage on every iteration.
+
+### Example:
+
+```solidity
+uint256[] public someArray;
+
+function doSomething() external {
+    uint256 _someArrayLength = someArray.length;
+    for (uint256 i = 0; i < _someArrayLength; i++) {
+        // do something ...
     }
 }
 ```
