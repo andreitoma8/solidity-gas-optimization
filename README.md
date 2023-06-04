@@ -56,6 +56,10 @@ uint128 b;
 
 they will be packed into the same storage slot and when you'd use one of them to, the contract will actually read the whole sotrage slot, and then get the value by it's offset. This means extra computation and extra gas. In this case it's just best to declare the values as `uint256` to skip the unpacking when you use them.
 
+### Memory usage
+
+Memory in the EVM is cheap to use as long as the data is small, but the cost increases exponentially as the data size increases. In Solidity, memory is never cleared, so it's ideal to to reuse memory variables as much as possible.
+
 ### Transaction data gas cost
 
 Since all the transactions are stored on the blockchain, the data size of the transaction is also stored on the blockchain. This means that we will pay gas for the data sent in the transaction. The cost of the data is `4 gas units` per 0x00 byte and `16 gas units` per non-0x00 byte.
@@ -202,9 +206,9 @@ function swap(...) external payable retuns (uint256 returnAmount) {
 }
 ```
 
-## Pack variables together\*\*\*
+## Pack variables together\*
 
-\*\*\* when they fit inside 32 bytes and are read together.
+\* when they fit inside 32 bytes and are read together.
 
 When variables are packed together, they are stored in the same storage slot, which means that they will cost less gas to read and write both at the same time.
 
@@ -241,5 +245,44 @@ function doSomething() external {
     for (uint256 i = 0; i < _someArrayLength; i++) {
         // do something ...
     }
+}
+```
+
+## Function names
+
+To call a Solidity function, the calldata contains the function selector, which is the first 4 bytes of the keccak256 hash of the function signature. On a low level, the EVM will compare the first 4 bytes of the calldata with the function selectors of all the functions in the contract to find the function to call. This means that the more functions a contract has, the more gas it will cost to call a function, but this can be optimized by making sure that the function selector of the function that will be most called has the lowest hex value and thus is the first function selector to be checked.(The functions are checked in increasing order of their function selector)
+
+Also, since bytes zero are cheaper than non-zero bytes, the more bytes zero the function selector has, the cheaper it is to call the function.
+
+### Example:
+
+```solidity
+// This function selector has the lowest hex value and the most bytes zero
+// so it will be the cheapest to call: 0x0c41b033
+function transferFrom(address from, address to, uint256 value) external returns (bool) {
+    // transfer logic ...
+}
+
+// This function selector has the highest hex value and the least bytes zero
+// so it will be the most expensive to call: 0xb483afd3
+function transfer(address to, uint256 value) external returns (bool) {
+
+    // transferFrom logic ...
+}
+```
+
+## Comparison operators
+
+EVM has no Opcodes for `>=` and `<=` operators, so they are compiled to a combination the available operators. This means that they will cost more gas than the other comparison operators. To optimize this, it's best to use the `>` and `<` operators instead.
+
+### Example:
+
+```solidity
+if (someValue >= 1) {
+    // do something ...
+}
+
+if (someValue > 0) {
+    // do something ...
 }
 ```
