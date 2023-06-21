@@ -80,7 +80,7 @@ Since all the transactions are stored on the blockchain, the data size of the tr
 
 ### Myth 1: Using smaller data types saves gas
 
-This is not true. The EVM works with 256-bit words, so using smaller data types will only cost you extra gas for the conversion. When setting a value that's for example a `uint8` to a storage slot, the EVM will tax you for writing to the entire 256-bit word, not just the 8 bits that you are using.
+This is not true. The EVM works with 256-bit words, so using smaller data types will only cost you extra gas for the conversion. When setting a value that's for example a `uint8` to a storage slot, the EVM will tax you for writing to the entire 256-bit word, not just the 8 bits that you are using. So it is good to pack variables in storage slots, but only when you are using(reading/writing) them together.
 
 That being said, you can save gas by using smaller data types in constants, because the compiler will not store the entire 256-bit word in the bytecode, but only the value that you are using.
 
@@ -130,6 +130,31 @@ function transfer(address to, uint256 value) external returns (bool) {
     }
     emit Transfer(msg.sender, to, value);
     return true;
+}
+```
+
+## Use Constant and Immutable variables:
+
+Constant and Immutable variables are stored in the bytecode of the contract as opposed to storage variables which are stored in the state of the contract. This means that constant and immutable variables are way cheaper to access than storage variables.
+
+### Constant variable:
+
+Constant variables are variables that are declared in the solidity code and are known at compile time. They can not be changed after the contract is deployed.
+
+### Immutable variable:
+
+Immutable variables are variable that are declared and have to be initialized in the constructor. They can not be changed after the contract is deployed.
+
+### Example:
+
+```solidity
+contract MyContract {
+    uint256 public constant a = 8;
+    uint256 public immutable b;
+
+    constructor(uint256 _b) {
+        b = _b;
+    }
 }
 ```
 
