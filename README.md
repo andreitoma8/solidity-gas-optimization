@@ -35,9 +35,9 @@ Opcodes are the lowest level of instructions for the EVM. The cost of executing 
 
 The most expensive opcodes are the ones that interact with the storage of the blockchain. These are the opcodes that are used to read and write to the blockchain's state: `SSTORE` and `SLOAD`.
 
--   Setting a storage variable from 0 to non-zero value costs `20,000 gas units`
--   Setting a storage variable from non-zero to non-zero value costs `5,000 gas units`
--   Reading a storage variable from non-zero to 0 value refunds gas
+-   Writing a storage variable from 0 to non-zero value costs `20,000 gas units`
+-   Writing a storage variable from non-zero to non-zero value costs `5,000 gas units`
+-   Writing a storage variable from non-zero to 0 value refunds gas
 
 #### Cold and Warm Storage
 
