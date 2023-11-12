@@ -43,6 +43,9 @@ The most expensive opcodes are the ones that interact with the storage of the bl
 
 A storage variable that is accessed(read or write) first time in a transaction is considered `cold storage` and a variable that has been accessed before in the same transaction is considered `warm storage`. Accessing a warm storage variable costs less than accessing a cold storage variable.
 
+- Reading a value from a warm storage slot costs `100 gas units`
+- Reading a value from a cold storage slot costs `2,100 gas units`
+
 #### Packing storage variables
 
 If multiple storage variables declared in Solidity can be packed into a single storage slot, the compiler will do so. When reading one of the variables, the EVM will read the entire storage slot, so it's best to pack variables that are read together.
